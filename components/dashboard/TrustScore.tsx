@@ -1,5 +1,5 @@
 import { Shield, TrendingUp, Users, Star, CheckCircle } from "lucide-react";
-import { Chart, Line, LineChart, ResponsiveContainer, XAxis, YAxis } from "recharts";
+import { Line, LineChart, ResponsiveContainer, XAxis, YAxis } from "recharts";
 
 interface TrustScoreProps {
   expanded?: boolean;

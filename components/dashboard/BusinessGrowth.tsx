@@ -1,5 +1,5 @@
 import { TrendingUp, Package, Users, Calendar } from "lucide-react";
-import { Chart, Line, LineChart, ResponsiveContainer, XAxis, YAxis, BarChart, Bar } from "recharts";
+import { Line, LineChart, ResponsiveContainer, XAxis, YAxis, BarChart, Bar } from "recharts";
 
 interface BusinessGrowthProps {
   expanded?: boolean;

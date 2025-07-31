@@ -82,7 +82,6 @@ export function StudentAdGenie({ expanded = false }: StudentAdGenieProps) {
                 src={creator.image}
                 alt={creator.name}
                 className="w-12 h-12 rounded-full object-cover"
-                fallbackSrc="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face"
               />
               <div className="flex-1">
                 <h4 className="font-medium text-gray-800">{creator.name}</h4>
