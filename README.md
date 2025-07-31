@@ -62,7 +62,7 @@ An all-in-one digital platform that supports MSMEs by offering:
 ---
 
 ## 🤝 Team VyapaarVikas  
-Made with ❤️ by [Your Team Name] at [Event/Hackathon Name]
+Made with ❤️ by TEAM- Git Push --force 
 
 ``Vyapaar badhao. Tarakki ko aawaz do.``
 
