@@ -39,7 +39,9 @@ export function Waste2Worth({ expanded = false }: Waste2WorthProps) {
             <SelectTrigger className="bg-white/60">
               <SelectValue placeholder="Select waste type" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="z-50 bg-white/30 backdrop-blur-lg border border-white/20 shadow-md rounded-xl ring-1 ring-white/10">
+
+
               {wasteTypes.map((type) => (
                 <SelectItem key={type.value} value={type.value}>
                   <div className="flex items-center justify-between w-full">

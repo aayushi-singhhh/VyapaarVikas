@@ -121,7 +121,8 @@ export function LoanBuddy({ expanded = false }: LoanBuddyProps) {
                   <SelectTrigger className="bg-white/60">
                     <SelectValue placeholder="Select industry" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="z-50 bg-white/30 backdrop-blur-lg border border-white/20 shadow-md rounded-xl ring-1 ring-white/10">
+
                     <SelectItem value="manufacturing">Manufacturing</SelectItem>
                     <SelectItem value="retail">Retail</SelectItem>
                     <SelectItem value="services">Services</SelectItem>
@@ -139,7 +140,8 @@ export function LoanBuddy({ expanded = false }: LoanBuddyProps) {
                   <SelectTrigger className="bg-white/60">
                     <SelectValue placeholder="Select years" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="z-50 bg-white/30 backdrop-blur-lg border border-white/20 shadow-md rounded-xl ring-1 ring-white/10">
+
                     <SelectItem value="1">Less than 1 year</SelectItem>
                     <SelectItem value="2">1-2 years</SelectItem>
                     <SelectItem value="5">3-5 years</SelectItem>
