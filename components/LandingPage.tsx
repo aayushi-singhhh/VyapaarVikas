@@ -111,7 +111,7 @@ export function LandingPage({ onNavigate }: LandingPageProps) {
       <div className="relative z-10">
         {/* Header with enhanced language toggle */}
         <header className="flex justify-between items-center p-6">
-          <div className="flex items-center gap-3">
+          {/* <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-yellow-500"></div>
             <div>
               <h2 className="text-lg font-bold text-gray-800">
@@ -121,7 +121,7 @@ export function LandingPage({ onNavigate }: LandingPageProps) {
                 व्यापार विकास
               </p>
             </div>
-          </div>
+          </div> */}
 
           {/* Enhanced Language Toggle */}
           <div className="flex items-center gap-2">
