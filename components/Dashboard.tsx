@@ -122,7 +122,14 @@ export function Dashboard({ onNavigate }: DashboardProps) {
           <div className="w-64 flex flex-col shadow-lg" style={{ background: 'linear-gradient(135deg, var(--vyapaar-royal-blue) 0%, var(--vyapaar-mustard) 100%)' }}>
               <div className="p-6 flex-1 overflow-y-auto">
                 <div className="flex items-center gap-3 mb-8">
-                  <div className="w-10 h-10 rounded-xl" style={{ background: 'linear-gradient(135deg, #1e40af 0%, #eab308 100%)' }}></div>
+                  <div className="w-10 h-10 rounded-xl overflow-hidden shadow-md">
+                    <img
+                      src="/indian-avatar.jpg"
+                      alt="User"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+
                   <div>
                     <h1 className="text-xl font-bold text-white">VyapaarVikas</h1>
                     <p className="text-sm text-white/80">व्यापार विकास</p>
@@ -226,7 +233,8 @@ export function Dashboard({ onNavigate }: DashboardProps) {
       />
 
       {/* Floating Voice Button */}
-      <VoiceButton />
+      <VoiceButton hide={isAIAssistantOpen} />
+
     </div>
   );
 }
