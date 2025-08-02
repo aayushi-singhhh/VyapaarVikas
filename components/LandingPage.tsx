@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ChevronDown, Globe, Play, Flag } from "lucide-react";
 import { Button } from "./ui/button";
 import {
@@ -17,6 +17,18 @@ interface LandingPageProps {
 
 export function LandingPage({ onNavigate }: LandingPageProps) {
   const [language, setLanguage] = useState("en");
+  const [imageLoaded, setImageLoaded] = useState(false);
+
+  // Use the renamed image file without spaces in the name
+  const backgroundImage = "/rural-shop-bg.png";
+
+  // Preload the image
+  useEffect(() => {
+    const img = new Image();
+    img.src = backgroundImage;
+    img.onload = () => setImageLoaded(true);
+    img.onerror = (e) => console.error("Failed to load background image:", e);
+  });
 
   const content = {
     en: {
@@ -68,15 +80,20 @@ export function LandingPage({ onNavigate }: LandingPageProps) {
     content[language as keyof typeof content];
 
   return (
+
     <div className="min-h-screen relative overflow-hidden">
+      {/* Fallback background in case image doesn't load */}
+      <div className="absolute inset-0 w-full h-full bg-gradient-to-br from-blue-50 to-purple-100 z-0"></div>
+      
       {/* Background with image */}
       <div
-        className="absolute inset-0"
-        style={{
-          backgroundImage: "url('/Generated-image-1-8.png')",
+        className="absolute inset-0 w-full h-full bg-cover bg-center z-0"
+        style={{ 
+          backgroundImage: `url(${backgroundImage})`,
           backgroundSize: "cover",
           backgroundPosition: "center",
-          backgroundRepeat: "no-repeat",
+          opacity: imageLoaded ? 1 : 0,
+          transition: "opacity 0.5s ease-in-out"
         }}
       >
         {/* Optional overlay for better text readability */}
