@@ -69,42 +69,18 @@ export function LandingPage({ onNavigate }: LandingPageProps) {
 
   return (
     <div className="min-h-screen relative overflow-hidden">
-      {/* Background with gradient and abstract shapes */}
+      {/* Background with image */}
       <div
-        className="absolute inset-0 bg-gradient-to-br from-yellow-300 via-yellow-200 to-sky-300"
+        className="absolute inset-0"
         style={{
-          background:
-            "linear-gradient(135deg, #fde047 0%, #fed7aa 25%, #bfdbfe 75%, #7dd3fc 100%)",
+          backgroundImage: "url('/Generated-image-1-8.png')",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat",
         }}
       >
-        {/* Abstract decorative shapes */}
-        <div className="absolute top-20 left-10 w-32 h-32 bg-white/20 rounded-full blur-xl"></div>
-        <div className="absolute top-40 right-20 w-48 h-48 bg-blue-200/30 rounded-full blur-2xl"></div>
-        <div className="absolute bottom-32 left-1/4 w-40 h-40 bg-yellow-200/40 rounded-full blur-xl"></div>
-        <div className="absolute bottom-20 right-10 w-56 h-56 bg-orange-200/20 rounded-full blur-2xl"></div>
-
-        {/* Curved decorative elements */}
-        <svg
-          className="absolute top-0 left-0 w-full h-32"
-          viewBox="0 0 1200 120"
-          fill="none"
-        >
-          <path
-            d="M0,64L48,69.3C96,75,192,85,288,80C384,75,480,53,576,48C672,43,768,53,864,64C960,75,1056,85,1152,80L1200,75L1200,0L1152,0C1056,0,960,0,864,0C768,0,672,0,576,0C480,0,384,0,288,0C192,0,96,0,48,0L0,0Z"
-            fill="rgba(255,255,255,0.1)"
-          />
-        </svg>
-
-        <svg
-          className="absolute bottom-0 right-0 w-full h-32 rotate-180"
-          viewBox="0 0 1200 120"
-          fill="none"
-        >
-          <path
-            d="M0,64L48,69.3C96,75,192,85,288,80C384,75,480,53,576,48C672,43,768,53,864,64C960,75,1056,85,1152,80L1200,75L1200,0L1152,0C1056,0,960,0,864,0C768,0,672,0,576,0C480,0,384,0,288,0C192,0,96,0,48,0L0,0Z"
-            fill="rgba(255,255,255,0.1)"
-          />
-        </svg>
+        {/* Optional overlay for better text readability */}
+        <div className="absolute inset-0 bg-black/20"></div>
       </div>
 
       {/* Content */}
@@ -157,6 +133,7 @@ export function LandingPage({ onNavigate }: LandingPageProps) {
         {/* Main content */}
         <main className="flex flex-col items-center justify-center min-h-[80vh] px-6 text-center">
           {/* Hero Section */}
+          <div className="glass-card rounded-2xl p-6 max-w-4xl mx-auto mb-12">
           <div className="mb-12">
             <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-gray-800 mb-4">
               VyapaarVikas
@@ -170,6 +147,7 @@ export function LandingPage({ onNavigate }: LandingPageProps) {
             <p className="text-base md:text-lg text-gray-600 max-w-2xl mx-auto leading-relaxed mb-8">
               {currentContent.description}
             </p>
+          </div>
 
             {/* Action buttons */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center">

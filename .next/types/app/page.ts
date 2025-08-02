@@ -1,4 +1,4 @@
-// File: /Users/aayushisingh/Downloads/VyapaarVikas MSME Dashboard (1)/app/page.tsx
+// File: /Users/aayushisingh/Documents/VyapaarVikas MSME Dashboard (1)/app/page.tsx
 import * as entry from '../../../app/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 
