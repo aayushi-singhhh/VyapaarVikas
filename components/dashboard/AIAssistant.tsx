@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { X, Send, Mic, MicOff, Bot, User, MessageCircle } from "lucide-react";
+import { useState, useEffect } from "react";
+import { X, Send, Mic, MicOff, Bot, User, MessageCircle, Volume2, VolumeX } from "lucide-react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { ScrollArea } from "../ui/scroll-area";
@@ -23,13 +23,16 @@ export function AIAssistant({ isOpen, onClose }: AIAssistantProps) {
     {
       id: '1',
       type: 'bot',
-      content: 'नमस्ते! मैं आपका Vyapaar सहायक हूँ। क्या मदद कर सकता हूँ?',
+      content: 'नमस्ते! मैं आपका AI-powered Vyapaar सहायक हूँ। Google Gemini द्वारा संचालित, मैं आपके व्यापार से जुड़े सभी सवालों के जवाब दे सकता हूँ। क्या मदद कर सकता हूँ? 🚀',
       timestamp: new Date()
     }
   ]);
   const [inputMessage, setInputMessage] = useState('');
   const [isListening, setIsListening] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [recognition, setRecognition] = useState<any>(null);
+  const [speechSynthesis, setSpeechSynthesis] = useState<SpeechSynthesis | null>(null);
 
   const recommendedQuestions = [
     "Loan Ready Score क्या होता है?",
@@ -38,7 +41,87 @@ export function AIAssistant({ isOpen, onClose }: AIAssistantProps) {
     "Waste2Worth पर scrap कैसे बेचूं?"
   ];
 
-  const handleSendMessage = (message: string) => {
+  // Initialize speech recognition and synthesis
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      // Initialize Speech Recognition
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      if (SpeechRecognition) {
+        const recognition = new SpeechRecognition();
+        recognition.continuous = false;
+        recognition.interimResults = false;
+        recognition.lang = 'hi-IN'; // Hindi primary, but also supports English
+        
+        recognition.onstart = () => {
+          setIsListening(true);
+        };
+        
+        recognition.onresult = (event: any) => {
+          const transcript = event.results[0][0].transcript;
+          setInputMessage(transcript);
+          setIsListening(false);
+          // Automatically send the voice message
+          setTimeout(() => handleSendMessage(transcript), 500);
+        };
+        
+        recognition.onerror = (event: any) => {
+          console.error('Speech recognition error:', event.error);
+          setIsListening(false);
+        };
+        
+        recognition.onend = () => {
+          setIsListening(false);
+        };
+        
+        setRecognition(recognition);
+      }
+      
+      // Initialize Speech Synthesis
+      if (window.speechSynthesis) {
+        setSpeechSynthesis(window.speechSynthesis);
+      }
+    }
+  }, []);
+
+  // Function to speak text
+  const speakText = (text: string) => {
+    if (speechSynthesis && 'speechSynthesis' in window) {
+      // Stop any current speech
+      speechSynthesis.cancel();
+      
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = 0.9;
+      utterance.pitch = 1;
+      utterance.volume = 0.8;
+      
+      // Try to use Hindi voice if available, fallback to English
+      const voices = speechSynthesis.getVoices();
+      const hindiVoice = voices.find(voice => voice.lang.includes('hi') || voice.lang.includes('Hindi'));
+      const englishVoice = voices.find(voice => voice.lang.includes('en'));
+      
+      if (hindiVoice) {
+        utterance.voice = hindiVoice;
+      } else if (englishVoice) {
+        utterance.voice = englishVoice;
+      }
+      
+      utterance.onstart = () => setIsSpeaking(true);
+      utterance.onend = () => setIsSpeaking(false);
+      utterance.onerror = () => setIsSpeaking(false);
+      
+      speechSynthesis.speak(utterance);
+    }
+  };
+
+  // Function to stop speaking
+  const stopSpeaking = () => {
+    if (speechSynthesis) {
+      speechSynthesis.cancel();
+      setIsSpeaking(false);
+    }
+  };
+
+  const handleSendMessage = async (message: string) => {
     if (!message.trim()) return;
 
     // Add user message
@@ -53,50 +136,100 @@ export function AIAssistant({ isOpen, onClose }: AIAssistantProps) {
     setInputMessage('');
     setIsTyping(true);
 
-    // Simulate bot response
-    setTimeout(() => {
-      const botResponse = generateBotResponse(message);
+    try {
+      // Call Gemini API
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ message }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        const botMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          type: 'bot',
+          content: data.response,
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, botMessage]);
+        
+        // Auto-speak the response if user used voice input
+        if (isListening || inputMessage === message) {
+          setTimeout(() => speakText(data.response), 300);
+        }
+      } else {
+        // Fallback to local response if API fails
+        const fallbackResponse = generateBotResponse(message);
+        const botMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          type: 'bot',
+          content: fallbackResponse,
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, botMessage]);
+      }
+    } catch (error) {
+      console.error('Error calling chat API:', error);
+      // Fallback to local response
+      const fallbackResponse = generateBotResponse(message);
       const botMessage: Message = {
         id: (Date.now() + 1).toString(),
         type: 'bot',
-        content: botResponse,
+        content: fallbackResponse,
         timestamp: new Date()
       };
       setMessages(prev => [...prev, botMessage]);
+    } finally {
       setIsTyping(false);
-    }, 1500);
+    }
   };
 
   const generateBotResponse = (userMessage: string): string => {
     const lowerMessage = userMessage.toLowerCase();
     
-    if (lowerMessage.includes('loan') || lowerMessage.includes('ऋण')) {
-      return 'Loan Readiness Score आपकी financial health को दर्शाता है। यह आपके business revenue, GST compliance, और credit history के आधार पर बनता है। अच्छा score होने से आपको बेहतर interest rates मिल सकते हैं। 📊';
+    if (lowerMessage.includes('loan') || lowerMessage.includes('ऋण') || lowerMessage.includes('ready score')) {
+      return 'आपका Loan Readiness Score आपकी financial health का एक comprehensive measure है। यह आपके business revenue, GST compliance, credit history, और financial statements के आधार पर calculate होता है। एक अच्छा score (750+) आपको better interest rates और faster loan approval में मदद करता है। हमारे platform पर आप अपना score check कर सकते हैं और improvement के लिए personalized suggestions भी मिलती हैं। 📊💰';
     }
     
-    if (lowerMessage.includes('student') || lowerMessage.includes('reel') || lowerMessage.includes('स्टूडेंट')) {
-      return 'Student creators के साथ collaborate करने के लिए Student AdGenie section में जाएं। वहाँ आप अपने budget के अनुसार creators को filter कर सकते हैं और उनके portfolio देख सकते हैं। 🎥✨';
+    if (lowerMessage.includes('student') || lowerMessage.includes('reel') || lowerMessage.includes('स्टूडेंट') || lowerMessage.includes('marketing')) {
+      return 'Student AdGenie के through आप talented student creators के साथ collaborate कर सकते हैं। यहाँ आप budget-wise filtering कर सकते हैं, creators के previous work देख सकते हैं, और cost-effective marketing campaigns चला सकते हैं। Students को real project experience मिलता है और आपको affordable, creative content मिलता है। यह एक win-win situation है! 🎥✨📱';
     }
     
-    if (lowerMessage.includes('register') || lowerMessage.includes('रजिस्टर')) {
-      return 'Business registration के लिए आपको Udyam Registration portal पर जाना होगा। आपको ये documents चाहिए: Aadhaar Card, PAN Card, Bank Account Details। हमारा Mini MBA section में detailed guide मिलेगी। 📋';
+    if (lowerMessage.includes('register') || lowerMessage.includes('रजिस्टर') || lowerMessage.includes('business') || lowerMessage.includes('udyam')) {
+      return 'Business registration के लिए सबसे important है Udyam Registration। आपको ये documents चाहिए होंगे: Aadhaar Card, PAN Card, bank account details, और business address proof। Process online होती है और usually 7-15 days लगती हैं। Registration के बाद आपको government schemes, subsidies, और easier loan access मिलता है। हमारे Mini MBA section में step-by-step guide भी उपलब्ध है। 📋✅';
     }
     
-    if (lowerMessage.includes('waste') || lowerMessage.includes('scrap') || lowerMessage.includes('अपशिष्ट')) {
-      return 'Waste2Worth में आप अपना waste sell कर सकते हैं। Plastic ₹15/kg, Paper ₹8/kg, Metal ₹25/kg पर मिलता है। Photo upload करें, weight बताएं, और pickup schedule करें। 🌱♻️';
+    if (lowerMessage.includes('waste') || lowerMessage.includes('scrap') || lowerMessage.includes('अपशिष्ट') || lowerMessage.includes('waste2worth')) {
+      return 'Waste2Worth marketplace में आप अपना industrial waste और scrap material बेच सकते हैं। Current rates: Plastic ₹12-18/kg, Paper ₹6-10/kg, Metal ₹20-35/kg (quality के according)। आपको बस photo upload करनी होगी, approximate weight बताना होगा, और pickup schedule करना होगा। यह circular economy को promote करता है और आपकी additional income भी होती है। 🌱♻️💚';
     }
     
-    return 'मैं आपकी मदद करने के लिए यहाँ हूँ! आप specific questions पूछ सकते हैं या फिर recommended questions में से कोई choose कर सकते हैं। 😊';
+    if (lowerMessage.includes('competitor') || lowerMessage.includes('spy') || lowerMessage.includes('competition')) {
+      return 'Competitor Spy tool आपको market insights देता है - competitors की pricing strategy, their marketing approaches, customer reviews analysis, और market positioning। यह data-driven decisions लेने में helpful है। आप अपने niche में top performers को track कर सकते हैं और उनकी best practices को adapt कर सकते हैं। Knowledge is power in business! 🔍📈';
+    }
+    
+    return 'मैं आपका AI-powered व्यापार सहायक हूँ और यहाँ आपकी हर business query में मदद करने के लिए हूँ। आप किसी भी specific topic के बारे में पूछ सकते हैं - loan assistance, marketing strategies, business registration, competitor analysis, या कुछ और भी। मैं आपको practical और actionable advice देने की कोशिश करूंगा। 😊🚀';
   };
-
+       
   const toggleVoice = () => {
-    setIsListening(!isListening);
-    // In a real implementation, you would integrate with Web Speech API
-    if (!isListening) {
-      setTimeout(() => {
+    if (!recognition) {
+      alert('Speech recognition not supported in your browser. Please use Chrome, Edge, or Safari.');
+      return;
+    }
+
+    if (isListening) {
+      recognition.stop();
+      setIsListening(false);
+    } else {
+      try {
+        recognition.start();
+      } catch (error) {
+        console.error('Error starting speech recognition:', error);
         setIsListening(false);
-        setInputMessage("आपका voice message यहाँ आएगा...");
-      }, 3000);
+      }
     }
   };
 
@@ -121,7 +254,7 @@ export function AIAssistant({ isOpen, onClose }: AIAssistantProps) {
               </div>
               <div>
                 <h3 className="font-semibold">AI Assistant</h3>
-                <p className="text-sm opacity-75">Vyapaar सहायक 🤖</p>
+                <p className="text-sm opacity-75">Vyapaar सहायक 🤖 | Voice Enabled 🎤</p>
               </div>
             </div>
             <Button 
@@ -157,12 +290,27 @@ export function AIAssistant({ isOpen, onClose }: AIAssistantProps) {
                   }`}
                 >
                   <p className="text-sm leading-relaxed">{message.content}</p>
-                  <p className="text-xs opacity-60 mt-1">
-                    {message.timestamp.toLocaleTimeString('hi-IN', { 
-                      hour: '2-digit', 
-                      minute: '2-digit' 
-                    })}
-                  </p>
+                  <div className="flex items-center justify-between mt-1">
+                    <p className="text-xs opacity-60">
+                      {message.timestamp.toLocaleTimeString('hi-IN', { 
+                        hour: '2-digit', 
+                        minute: '2-digit' 
+                      })}
+                    </p>
+                    {message.type === 'bot' && (
+                      <button
+                        onClick={() => isSpeaking ? stopSpeaking() : speakText(message.content)}
+                        className="ml-2 p-1 rounded-full hover:bg-gray-200 transition-colors"
+                        title={isSpeaking ? "Stop speaking" : "Read aloud"}
+                      >
+                        {isSpeaking ? (
+                          <VolumeX className="w-3 h-3 text-gray-600" />
+                        ) : (
+                          <Volume2 className="w-3 h-3 text-gray-600" />
+                        )}
+                      </button>
+                    )}
+                  </div>
                 </div>
 
                 {message.type === 'user' && (
@@ -194,7 +342,8 @@ export function AIAssistant({ isOpen, onClose }: AIAssistantProps) {
         {/* Recommended Questions */}
         {messages.length === 1 && (
           <div className="p-4 border-t border-gray-200/50 bg-gray-50/50 flex-shrink-0">
-            <h4 className="text-sm font-medium text-gray-700 mb-3">Suggested Questions:</h4>
+            <h4 className="text-sm font-medium text-gray-700 mb-2">Suggested Questions:</h4>
+            <p className="text-xs text-gray-500 mb-3">💡 Click or use voice command (🎤)</p>
             <div className="space-y-2">
               {recommendedQuestions.map((question, index) => (
                 <button
@@ -206,6 +355,12 @@ export function AIAssistant({ isOpen, onClose }: AIAssistantProps) {
                   {question}
                 </button>
               ))}
+            </div>
+            <div className="mt-3 p-2 bg-blue-50 rounded-lg">
+              <p className="text-xs text-blue-700">
+                <Mic className="w-3 h-3 inline mr-1" />
+                <strong>Voice Commands:</strong> Hindi & English supported
+              </p>
             </div>
           </div>
         )}
@@ -245,9 +400,21 @@ export function AIAssistant({ isOpen, onClose }: AIAssistantProps) {
             </Button>
           </div>
           {isListening && (
-            <p className="text-xs text-red-500 mt-2 text-center animate-pulse">
-              🎤 Listening... / सुन रहा हूँ...
-            </p>
+            <div className="text-xs text-red-500 mt-2 text-center animate-pulse">
+              <div className="flex items-center justify-center gap-2">
+                <div className="w-2 h-2 bg-red-500 rounded-full animate-ping"></div>
+                <span>🎤 सुन रहा हूँ... अपना सवाल बोलें / Listening... Speak your question</span>
+                <div className="w-2 h-2 bg-red-500 rounded-full animate-ping"></div>
+              </div>
+            </div>
+          )}
+          {isSpeaking && (
+            <div className="text-xs text-blue-500 mt-2 text-center animate-pulse">
+              <div className="flex items-center justify-center gap-2">
+                <Volume2 className="w-3 h-3" />
+                <span>🔊 बोल रहा हूँ... / Speaking...</span>
+              </div>
+            </div>
           )}
         </div>
       </div>
