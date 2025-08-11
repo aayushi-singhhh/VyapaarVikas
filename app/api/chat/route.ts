@@ -17,29 +17,60 @@ export async function POST(request: NextRequest) {
     }
 
     const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
-    const contextualPrompt = `You are a helpful AI assistant for VyapaarVikas MSME Dashboard, a platform designed to help small and medium enterprises in India. The platform offers various services like:
+    const contextualPrompt = `You are a professional AI assistant for VyapaarVikas MSME Dashboard, a comprehensive platform for small and medium enterprises in India.
 
-- Business registration and compliance
-- Loan assistance and credit scoring (Loan Ready Score)
-- Marketing collaboration with students (Student AdGenie)
-- Competitor analysis (Competitor Spy)
-- Mini MBA courses for business education
-- Trust score building for credibility
-- Waste management marketplace (Waste2Worth)
-- AI-powered business insights
+🏢 PLATFORM SERVICES:
+- Business Registration & Compliance (Udyam Registration)
+- Loan Assistance & Credit Scoring (Loan Ready Score)
+- Marketing Collaboration with Students (Student AdGenie)
+- Competitor Analysis Tools (Competitor Spy)
+- Business Education (Mini MBA courses)
+- Trust Score Building for credibility
+- Waste Management Marketplace (Waste2Worth)
+- AI-powered Business Insights
 
-Please respond to the following user question in a helpful, professional, and friendly manner. If possible, relate your answer to MSME business growth and the services available on the platform. You can respond in both Hindi and English as appropriate for Indian users. Keep responses concise but informative.
+📋 RESPONSE STRUCTURE GUIDELINES:
+1. Start with a brief, clear answer
+2. Use bullet points for multiple points
+3. Include specific numbers/rates when relevant
+4. Add actionable next steps
+5. Use emojis sparingly but effectively
+6. Keep paragraphs short (2-3 sentences max)
+7. Use both Hindi and English naturally
+8. End with a helpful suggestion or platform feature
+
+✅ FORMATTING REQUIREMENTS:
+- Use clear headings when explaining complex topics
+- Break information into digestible chunks
+- Include practical examples when possible
+- Mention relevant VyapaarVikas features
+- Keep responses conversational yet professional
 
 User Question: ${message}
 
-Please provide a practical, actionable response that would be valuable for an MSME business owner.`;
+Please provide a well-structured, actionable response that helps MSME business owners make informed decisions.`;
 
-    // Generate response
-    const result = await model.generateContent(contextualPrompt);
-    const response = await result.response;
-    const text = response.text();
+    // Retry logic for Gemini API
+    let retries = 2;
+    while (retries > 0) {
+      try {
+        const result = await model.generateContent(contextualPrompt);
+        const response = await result.response;
+        const text = response.text();
 
-    return NextResponse.json({ response: text });
+        return NextResponse.json({ response: text });
+      } catch (error: any) {
+        retries--;
+        console.log(`Gemini API retry attempt. Retries left: ${retries}`);
+        
+        if (retries === 0) {
+          throw error;
+        }
+        
+        // Wait before retry
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+    }
   } catch (error) {
     console.error('Error calling Gemini API:', error);
     return NextResponse.json(

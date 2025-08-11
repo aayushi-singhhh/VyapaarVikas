@@ -192,26 +192,154 @@ export function AIAssistant({ isOpen, onClose }: AIAssistantProps) {
     const lowerMessage = userMessage.toLowerCase();
     
     if (lowerMessage.includes('loan') || lowerMessage.includes('ऋण') || lowerMessage.includes('ready score')) {
-      return 'आपका Loan Readiness Score आपकी financial health का एक comprehensive measure है। यह आपके business revenue, GST compliance, credit history, और financial statements के आधार पर calculate होता है। एक अच्छा score (750+) आपको better interest rates और faster loan approval में मदद करता है। हमारे platform पर आप अपना score check कर सकते हैं और improvement के लिए personalized suggestions भी मिलती हैं। 📊💰';
+      return `💳 **Loan Readiness Score समझें:**
+
+🎯 **यह क्या है:**
+Loan Readiness Score आपकी financial health का comprehensive measure है।
+
+📊 **मुख्य factors:**
+• Business revenue patterns
+• GST compliance record
+• Credit history & repayment track
+• Financial statements accuracy
+• Bank transaction analysis
+
+✅ **Score ranges:**
+• 750+: Excellent (बेहतरीन interest rates)
+• 650-749: Good (अच्छी loan terms)
+• 550-649: Average (standard rates)
+• Below 550: Needs improvement
+
+🚀 **अगला कदम:**
+हमारे platform पर free score check करें और personalized improvement tips पाएं!`;
     }
     
     if (lowerMessage.includes('student') || lowerMessage.includes('reel') || lowerMessage.includes('स्टूडेंट') || lowerMessage.includes('marketing')) {
-      return 'Student AdGenie के through आप talented student creators के साथ collaborate कर सकते हैं। यहाँ आप budget-wise filtering कर सकते हैं, creators के previous work देख सकते हैं, और cost-effective marketing campaigns चला सकते हैं। Students को real project experience मिलता है और आपको affordable, creative content मिलता है। यह एक win-win situation है! 🎥✨📱';
+      return `🎬 **Student AdGenie - Smart Marketing:**
+
+💡 **Concept:**
+Cost-effective marketing through talented student creators।
+
+🎯 **Key benefits:**
+• Budget-friendly rates (₹500-5000 per project)
+• Creative, fresh content ideas
+• Multiple format options (Reels, Posts, Videos)
+• Students get real experience
+
+📋 **How to start:**
+1. Define your budget & requirements
+2. Browse student portfolios
+3. Review previous work samples
+4. Collaborate & create content
+
+🚀 **Platform feature:**
+Student AdGenie section में जाकर अभी explore करें!`;
     }
     
     if (lowerMessage.includes('register') || lowerMessage.includes('रजिस्टर') || lowerMessage.includes('business') || lowerMessage.includes('udyam')) {
-      return 'Business registration के लिए सबसे important है Udyam Registration। आपको ये documents चाहिए होंगे: Aadhaar Card, PAN Card, bank account details, और business address proof। Process online होती है और usually 7-15 days लगती हैं। Registration के बाद आपको government schemes, subsidies, और easier loan access मिलता है। हमारे Mini MBA section में step-by-step guide भी उपलब्ध है। 📋✅';
+      return `📋 **Business Registration Guide:**
+
+🎯 **Primary registration: Udyam Registration**
+
+📄 **Required documents:**
+• Aadhaar Card (mandatory)
+• PAN Card (business/individual)
+• Bank account details
+• Business address proof
+• GST registration (if applicable)
+
+⏱️ **Timeline:**
+• Online application: 1-2 hours
+• Processing time: 7-15 working days
+• Certificate download: Instant after approval
+
+💰 **Benefits unlock:**
+• Government scheme access
+• Subsidy eligibility
+• Easier loan approval
+• Priority in tenders
+
+🚀 **Expert help:**
+Mini MBA section में detailed step-by-step guide available है!`;
     }
     
     if (lowerMessage.includes('waste') || lowerMessage.includes('scrap') || lowerMessage.includes('अपशिष्ट') || lowerMessage.includes('waste2worth')) {
-      return 'Waste2Worth marketplace में आप अपना industrial waste और scrap material बेच सकते हैं। Current rates: Plastic ₹12-18/kg, Paper ₹6-10/kg, Metal ₹20-35/kg (quality के according)। आपको बस photo upload करनी होगी, approximate weight बताना होगा, और pickup schedule करना होगा। यह circular economy को promote करता है और आपकी additional income भी होती है। 🌱♻️💚';
+      return `♻️ **Waste2Worth Marketplace:**
+
+🌱 **Concept:**
+Turn your business waste into additional revenue stream।
+
+💰 **Current market rates:**
+• Plastic waste: ₹12-18/kg
+• Paper/Cardboard: ₹6-10/kg
+• Metal scrap: ₹20-35/kg
+• Electronic waste: ₹5-15/kg
+(Rates vary by quality & quantity)
+
+📱 **Simple process:**
+1. Upload waste photos
+2. Specify approximate weight
+3. Get instant price quotes
+4. Schedule pickup
+5. Receive payment
+
+🎯 **Impact:**
+• Generate extra income
+• Support circular economy
+• Reduce disposal costs
+• Environmental contribution
+
+🚀 **Start selling:**
+Waste2Worth section पर अभी list करें!`;
     }
     
     if (lowerMessage.includes('competitor') || lowerMessage.includes('spy') || lowerMessage.includes('competition')) {
-      return 'Competitor Spy tool आपको market insights देता है - competitors की pricing strategy, their marketing approaches, customer reviews analysis, और market positioning। यह data-driven decisions लेने में helpful है। आप अपने niche में top performers को track कर सकते हैं और उनकी best practices को adapt कर सकते हैं। Knowledge is power in business! 🔍📈';
+      return `🔍 **Competitor Spy - Market Intelligence:**
+
+🎯 **Purpose:**
+Stay ahead with data-driven competitive insights।
+
+📊 **Key analytics:**
+• Pricing strategy analysis
+• Marketing approach study
+• Customer review sentiment
+• Market positioning data
+• Growth pattern tracking
+
+💡 **Actionable insights:**
+• Identify pricing opportunities
+• Discover content gaps
+• Learn from their mistakes
+• Find untapped markets
+• Improve your USP
+
+📈 **Business impact:**
+• Better pricing decisions
+• Improved marketing ROI
+• Faster market adaptation
+• Competitive advantage
+
+🚀 **Platform access:**
+Competitor Spy tool से अपने niche को analyze करें!`;
     }
     
-    return 'मैं आपका AI-powered व्यापार सहायक हूँ और यहाँ आपकी हर business query में मदद करने के लिए हूँ। आप किसी भी specific topic के बारे में पूछ सकते हैं - loan assistance, marketing strategies, business registration, competitor analysis, या कुछ और भी। मैं आपको practical और actionable advice देने की कोशिश करूंगा। 😊🚀';
+    return `🤖 **आपका AI व्यापार सहायक:**
+
+मैं यहाँ आपकी हर business query में professional help करने के लिए हूँ।
+
+🎯 **मैं इन topics में expert हूँ:**
+• Loan assistance & credit improvement
+• Marketing strategies & student collaboration
+• Business registration & compliance
+• Competitor analysis & market insights
+• Waste management & additional revenue
+• Growth strategies & best practices
+
+💬 **बेझिझक पूछें:**
+Specific questions, detailed guidance, या practical tips - सब कुछ!
+
+🚀 **Pro tip:**
+Voice command भी use कर सकते हैं! 🎤`;
   };
        
   const toggleVoice = () => {
@@ -289,7 +417,63 @@ export function AIAssistant({ isOpen, onClose }: AIAssistantProps) {
                       : 'bg-gray-100 text-gray-800 rounded-bl-none'
                   }`}
                 >
-                  <p className="text-sm leading-relaxed">{message.content}</p>
+                  <div className="text-sm leading-relaxed whitespace-pre-line">
+                    {message.content.split('\n').map((line, index) => {
+                      // Handle bold text **text**
+                      if (line.includes('**')) {
+                        const parts = line.split('**');
+                        return (
+                          <div key={index} className="mb-1">
+                            {parts.map((part, partIndex) => 
+                              partIndex % 2 === 1 ? (
+                                <strong key={partIndex} className="font-semibold">{part}</strong>
+                              ) : (
+                                <span key={partIndex}>{part}</span>
+                              )
+                            )}
+                          </div>
+                        );
+                      }
+                      // Handle bullet points
+                      else if (line.trim().startsWith('•')) {
+                        return (
+                          <div key={index} className="ml-3 mb-1 flex items-start">
+                            <span className="text-blue-500 mr-2">•</span>
+                            <span>{line.replace('•', '').trim()}</span>
+                          </div>
+                        );
+                      }
+                      // Handle numbered points
+                      else if (/^\d+\./.test(line.trim())) {
+                        return (
+                          <div key={index} className="ml-3 mb-1 flex items-start">
+                            <span className="text-blue-500 mr-2 font-medium">
+                              {line.trim().match(/^\d+\./)?.[0]}
+                            </span>
+                            <span>{line.replace(/^\d+\./, '').trim()}</span>
+                          </div>
+                        );
+                      }
+                      // Handle headings (lines with emojis at start)
+                      else if (/^[🎯💡📊💰🚀🔍📋⭐✅📈🌱♻️💬🤖]/.test(line.trim())) {
+                        return (
+                          <div key={index} className="font-medium text-gray-900 mb-2 mt-3 first:mt-0">
+                            {line}
+                          </div>
+                        );
+                      }
+                      // Regular lines
+                      else if (line.trim()) {
+                        return (
+                          <div key={index} className="mb-1">
+                            {line}
+                          </div>
+                        );
+                      }
+                      // Empty lines
+                      return <div key={index} className="mb-1"></div>;
+                    })}
+                  </div>
                   <div className="flex items-center justify-between mt-1">
                     <p className="text-xs opacity-60">
                       {message.timestamp.toLocaleTimeString('hi-IN', { 
@@ -327,11 +511,17 @@ export function AIAssistant({ isOpen, onClose }: AIAssistantProps) {
                 <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
                   <Bot className="w-4 h-4 text-white" />
                 </div>
-                <div className="bg-gray-100 p-3 rounded-2xl rounded-bl-none">
-                  <div className="flex gap-1">
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                <div className="bg-gray-100 p-3 rounded-2xl rounded-bl-none max-w-[80%]">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="flex gap-1">
+                      <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"></div>
+                      <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                      <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                    </div>
+                    <span className="text-xs text-gray-600">Generating structured response...</span>
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    📋 Organizing information with headings, bullet points, and actionable insights...
                   </div>
                 </div>
               </div>
