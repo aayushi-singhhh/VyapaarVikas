@@ -6,6 +6,7 @@ import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
+import { CreatorHub } from "./student-creator/CreatorHub";
 
 interface AuthenticationProps {
   onNavigate: (page: string) => void;
@@ -140,7 +141,7 @@ export function Authentication({ onNavigate, initialMode = 'login' }: Authentica
 
         {/* Main content */}
         <main className="flex-1 flex items-center justify-center px-6 py-8">
-          <div className="w-full max-w-4xl">
+          <div className="w-full max-w-6xl">
             <div className="text-center mb-8">
               <h1 className="text-3xl md:text-4xl font-bold text-gray-800 mb-2">
                 {mode === 'login' ? currentContent.login : currentContent.signup}
@@ -154,7 +155,7 @@ export function Authentication({ onNavigate, initialMode = 'login' }: Authentica
             </div>
 
             {/* Enhanced Authentication form with soft shadows */}
-            <div className="glass-card rounded-3xl p-8 max-w-2xl mx-auto shadow-2xl">
+            <div className="glass-card rounded-3xl p-10 max-w-4xl mx-auto shadow-2xl">
               <Tabs value={userType} onValueChange={(value) => setUserType(value as 'msme' | 'creator')}>
                 <TabsList className="grid w-full grid-cols-2 mb-6 bg-white/60 p-1 rounded-2xl">
                   <TabsTrigger value="msme" className="flex items-center gap-2 rounded-xl py-3">
@@ -325,145 +326,7 @@ export function Authentication({ onNavigate, initialMode = 'login' }: Authentica
                 </TabsContent>
 
                 <TabsContent value="creator">
-                  <form onSubmit={handleSubmit} className="space-y-5">
-                    {mode === 'signup' && (
-                      <>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <Label htmlFor="creatorFirstName" className="text-gray-700">
-                              {currentContent.firstName} / {content.hi.firstName}
-                            </Label>
-                            <Input
-                              id="creatorFirstName"
-                              placeholder={currentContent.firstName}
-                              className="bg-white/70 backdrop-blur-sm border border-white/30 rounded-xl shadow-sm focus:shadow-md transition-all duration-200"
-                              required
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="creatorLastName" className="text-gray-700">
-                              {currentContent.lastName} / {content.hi.lastName}
-                            </Label>
-                            <Input
-                              id="creatorLastName"
-                              placeholder={currentContent.lastName}
-                              className="bg-white/70 backdrop-blur-sm border border-white/30 rounded-xl shadow-sm focus:shadow-md transition-all duration-200"
-                              required
-                            />
-                          </div>
-                        </div>
-                        
-                        <div className="space-y-2">
-                          <Label htmlFor="collegeName" className="text-gray-700">
-                            {currentContent.collegeName} / {content.hi.collegeName}
-                          </Label>
-                          <div className="relative">
-                            <GraduationCap className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                            <Input
-                              id="collegeName"
-                              placeholder={currentContent.collegeName}
-                              className="pl-10 bg-white/70 backdrop-blur-sm border border-white/30 rounded-xl shadow-sm focus:shadow-md transition-all duration-200"
-                              required
-                            />
-                          </div>
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label htmlFor="specialization" className="text-gray-700">
-                            {currentContent.specialization} / {content.hi.specialization}
-                          </Label>
-                          <Input
-                            id="specialization"
-                            placeholder="e.g., Content Creation, Video Editing, Photography"
-                            className="bg-white/70 backdrop-blur-sm border border-white/30 rounded-xl shadow-sm focus:shadow-md transition-all duration-200"
-                            required
-                          />
-                        </div>
-                      </>
-                    )}
-
-                    <div className="space-y-2">
-                      <Label htmlFor="creatorEmail" className="text-gray-700">
-                        {currentContent.email} / {content.hi.email}
-                      </Label>
-                      <div className="relative">
-                        <Mail className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                        <Input
-                          id="creatorEmail"
-                          type="email"
-                          placeholder={currentContent.email}
-                          className="pl-10 bg-white/70 backdrop-blur-sm border border-white/30 rounded-xl shadow-sm focus:shadow-md transition-all duration-200"
-                          required
-                        />
-                      </div>
-                    </div>
-
-                    {mode === 'signup' && (
-                      <div className="space-y-2">
-                        <Label htmlFor="creatorPhone" className="text-gray-700">
-                          {currentContent.phone} / {content.hi.phone}
-                        </Label>
-                        <div className="relative">
-                          <Phone className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                          <Input
-                            id="creatorPhone"
-                            type="tel"
-                            placeholder="+91 9876543210"
-                            className="pl-10 bg-white/70 backdrop-blur-sm border border-white/30 rounded-xl shadow-sm focus:shadow-md transition-all duration-200"
-                            required
-                          />
-                        </div>
-                      </div>
-                    )}
-
-                    <div className="space-y-2">
-                      <Label htmlFor="creatorPassword" className="text-gray-700">
-                        {currentContent.password} / {content.hi.password}
-                      </Label>
-                      <div className="relative">
-                        <Lock className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                        <Input
-                          id="creatorPassword"
-                          type={showPassword ? "text" : "password"}
-                          placeholder={currentContent.password}
-                          className="pl-10 pr-10 bg-white/70 backdrop-blur-sm border border-white/30 rounded-xl shadow-sm focus:shadow-md transition-all duration-200"
-                          required
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowPassword(!showPassword)}
-                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                        >
-                          {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                        </button>
-                      </div>
-                    </div>
-
-                    {mode === 'signup' && (
-                      <div className="space-y-2">
-                        <Label htmlFor="creatorConfirmPassword" className="text-gray-700">
-                          {currentContent.confirmPassword} / {content.hi.confirmPassword}
-                        </Label>
-                        <div className="relative">
-                          <Lock className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                          <Input
-                            id="creatorConfirmPassword"
-                            type="password"
-                            placeholder={currentContent.confirmPassword}
-                            className="pl-10 bg-white/70 backdrop-blur-sm border border-white/30 rounded-xl shadow-sm focus:shadow-md transition-all duration-200"
-                            required
-                          />
-                        </div>
-                      </div>
-                    )}
-
-                    <Button 
-                      type="submit" 
-                      className="w-full py-4 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105"
-                    >
-                      {mode === 'login' ? currentContent.loginButton : currentContent.registerCreator}
-                    </Button>
-                  </form>
+                  <CreatorHub mode={mode} />
                 </TabsContent>
               </Tabs>
 
