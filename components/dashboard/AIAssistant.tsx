@@ -5,10 +5,12 @@ import { X, Send, Mic, MicOff, Bot, User, MessageCircle, Volume2, VolumeX } from
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { ScrollArea } from "../ui/scroll-area";
+import { VoiceButton } from "./VoiceButton";
 
 interface AIAssistantProps {
   isOpen: boolean;
   onClose: () => void;
+  autoStartVoice?: boolean; // New prop to auto-start voice when opened
 }
 
 interface Message {
@@ -18,7 +20,7 @@ interface Message {
   timestamp: Date;
 }
 
-export function AIAssistant({ isOpen, onClose }: AIAssistantProps) {
+export function AIAssistant({ isOpen, onClose, autoStartVoice = false }: AIAssistantProps) {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
@@ -82,6 +84,19 @@ export function AIAssistant({ isOpen, onClose }: AIAssistantProps) {
       }
     }
   }, []);
+
+  // Auto-start voice when opened via VoiceButton
+  useEffect(() => {
+    if (isOpen && autoStartVoice && recognition && !isListening) {
+      setTimeout(() => {
+        try {
+          recognition.start();
+        } catch (error) {
+          console.error('Error auto-starting speech recognition:', error);
+        }
+      }, 500); // Small delay to ensure component is fully rendered
+    }
+  }, [isOpen, autoStartVoice, recognition, isListening]);
 
   // Function to speak text
   const speakText = (text: string) => {

@@ -4,20 +4,30 @@ import { useState } from "react";
 import { Mic, MicOff } from "lucide-react";
 import { Button } from "../ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
+
 interface VoiceButtonProps {
   hide?: boolean;
+  onClick?: () => void;
+  isListening?: boolean;
+  onVoiceToggle?: () => void;
 }
 
-export function VoiceButton({ hide }: VoiceButtonProps) {
-  if (hide) return null; // 🔥 Hides button completely when `hide` is true
+export function VoiceButton({ hide, onClick, isListening: externalListening, onVoiceToggle }: VoiceButtonProps) {
+  if (hide) return null;
 
-  const [isListening, setIsListening] = useState(false);
+  const [internalListening, setInternalListening] = useState(false);
+  const isListening = externalListening !== undefined ? externalListening : internalListening;
 
   const handleVoiceToggle = () => {
-    setIsListening(!isListening);
-    if (!isListening) {
+    if (onVoiceToggle) {
+      // If AI Assistant is managing the voice state
+      onVoiceToggle();
+    } else if (onClick) {
+      // Fallback: open AI Assistant
+      onClick();
+      setInternalListening(true);
       setTimeout(() => {
-        setIsListening(false);
+        setInternalListening(false);
       }, 3000);
     }
   };
@@ -43,14 +53,13 @@ export function VoiceButton({ hide }: VoiceButtonProps) {
             </Button>
           </TooltipTrigger>
           <TooltipContent side="left" className="bg-gray-800 text-white">
-            <p className="text-sm">{isListening ? 'Stop Listening' : 'Speak to Navigate'}</p>
-            <p className="text-xs opacity-75">{isListening ? 'सुनना बंद करें' : 'बोलिए, चलिए'}</p>
+            <p className="text-sm">{isListening ? 'Stop Listening' : 'Open AI Assistant & Speak'}</p>
+            <p className="text-xs opacity-75">{isListening ? 'सुनना बंद करें' : 'AI सहायक खोलें और बोलें'}</p>
           </TooltipContent>
         </Tooltip>
 
-        {/* 👇 Label under button */}
         <span className="mt-2 text-xs text-gray-700 bg-white/70 backdrop-blur-sm px-2 py-1 rounded-full shadow">
-          Voice Command
+          AI Assistant
         </span>
       </div>
     </TooltipProvider>

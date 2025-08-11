@@ -34,6 +34,17 @@ interface DashboardProps {
 export function Dashboard({ onNavigate }: DashboardProps) {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [isAIAssistantOpen, setIsAIAssistantOpen] = useState(false);
+  const [autoStartVoice, setAutoStartVoice] = useState(false);
+
+  const handleVoiceButtonClick = () => {
+    setAutoStartVoice(true);
+    setIsAIAssistantOpen(true);
+  };
+
+  const handleAIAssistantClose = () => {
+    setIsAIAssistantOpen(false);
+    setAutoStartVoice(false);
+  };
  
   const menuItems = [
     { id: "dashboard", icon: LayoutDashboard, label: "Dashboard", hindi: "डैशबोर्ड" },
@@ -229,11 +240,15 @@ export function Dashboard({ onNavigate }: DashboardProps) {
       {/* AI Assistant Panel */}
       <AIAssistant 
         isOpen={isAIAssistantOpen} 
-        onClose={() => setIsAIAssistantOpen(false)} 
+        onClose={handleAIAssistantClose}
+        autoStartVoice={autoStartVoice}
       />
 
-      {/* Floating Voice Button */}
-      <VoiceButton hide={isAIAssistantOpen} />
+      {/* Floating Voice Button - Connected to AI Assistant */}
+      <VoiceButton 
+        hide={isAIAssistantOpen} 
+        onClick={handleVoiceButtonClick}
+      />
 
     </div>
   );

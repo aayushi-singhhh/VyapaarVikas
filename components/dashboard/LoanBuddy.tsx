@@ -1,4 +1,5 @@
-import { CreditCard, TrendingUp, AlertCircle, Brain, FileText, Search, Upload, Check, Target } from "lucide-react";
+import { useState, useEffect } from "react";
+import { CreditCard, TrendingUp, AlertCircle, Brain, FileText, Search, Upload, Check, Target, Loader2, ExternalLink, Star } from "lucide-react";
 import { Progress } from "../ui/progress";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
@@ -9,12 +10,92 @@ interface LoanBuddyProps {
   expanded?: boolean;
 }
 
+interface BankScheme {
+  bankName: string;
+  schemeName: string;
+  loanAmountRange: string;
+  interestRate: string;
+  processingTime: string;
+  keyFeatures: string[];
+  eligibilityRequiredCriteria: string[];
+  requiredDocuments: string[];
+  specialBenefits: string[];
+  applicationLink: string;
+  lastUpdated: string;
+  isRecommended?: boolean;
+}
+
+interface SchemeRecommendations {
+  bestMatch: string;
+  reasoning: string;
+  alternativeOptions: string[];
+}
+
+interface BankSchemesResponse {
+  schemes: BankScheme[];
+  recommendations: SchemeRecommendations;
+  lastUpdated: string;
+}
+
 export function LoanBuddy({ expanded = false }: LoanBuddyProps) {
-  const loanOffers = [
-    { bank: "SBI", amount: "₹5 Lakh", rate: "9.5%", type: "Business Loan", approval: "7 days", docs: 3 },
-    { bank: "HDFC", amount: "₹3 Lakh", rate: "10.2%", type: "MSME Loan", approval: "5 days", docs: 4 },
-    { bank: "ICICI", amount: "₹2 Lakh", rate: "11.5%", type: "Working Capital", approval: "3 days", docs: 2 },
-  ];
+  const [bankSchemes, setBankSchemes] = useState<BankScheme[]>([]);
+  const [recommendations, setRecommendations] = useState<SchemeRecommendations | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [businessType, setBusinessType] = useState('');
+  const [annualRevenue, setAnnualRevenue] = useState('');
+  const [loanAmount, setLoanAmount] = useState('');
+  const [gstNumber, setGstNumber] = useState('');
+  const [yearsActive, setYearsActive] = useState('');
+
+  // Fetch bank schemes from API
+  const fetchBankSchemes = async () => {
+    if (!businessType || !annualRevenue) {
+      alert('Please fill in both Industry and Annual Revenue to get personalized loan schemes.');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const response = await fetch('/api/bank-schemes', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          businessType,
+          revenue: annualRevenue,
+          loanAmount,
+          location: 'India'
+        }),
+      });
+
+      const data: BankSchemesResponse = await response.json();
+      
+      if (response.ok) {
+        setBankSchemes(data.schemes || []);
+        setRecommendations(data.recommendations || null);
+      } else {
+        console.error('API Error:', data);
+        setBankSchemes([]);
+      }
+    } catch (error) {
+      console.error('Error fetching bank schemes:', error);
+      setBankSchemes([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Auto-fetch when form is complete
+  useEffect(() => {
+    if (businessType && annualRevenue) {
+      const debounceTimer = setTimeout(() => {
+        fetchBankSchemes();
+      }, 1000);
+      
+      return () => clearTimeout(debounceTimer);
+    }
+  }, [businessType, annualRevenue, loanAmount]);
 
   const documents = [
     { name: "GST Certificate", status: "uploaded", required: true },
@@ -59,16 +140,36 @@ export function LoanBuddy({ expanded = false }: LoanBuddyProps) {
               <div className="flex items-center gap-3">
                 <CreditCard className="w-5 h-5 text-blue-500" />
                 <div>
-                  <p className="text-sm font-medium text-gray-800">SBI Business Loan</p>
-                  <p className="text-xs text-gray-600">व्यापारिक ऋण</p>
+                  <p className="text-sm font-medium text-gray-800">
+                    {bankSchemes.length > 0 ? bankSchemes[0].bankName : 'Complete form for schemes'}
+                  </p>
+                  <p className="text-xs text-gray-600">
+                    {bankSchemes.length > 0 ? 'व्यापारिक ऋण' : 'योजनाओं के लिए फॉर्म भरें'}
+                  </p>
                 </div>
               </div>
               <div className="text-right">
-                <p className="text-sm font-bold text-blue-600">₹5L</p>
-                <p className="text-xs text-gray-500">@9.5%</p>
+                <p className="text-sm font-bold text-blue-600">
+                  {bankSchemes.length > 0 ? bankSchemes[0].loanAmountRange : 'Fill Form'}
+                </p>
+                <p className="text-xs text-gray-500">
+                  {bankSchemes.length > 0 ? `@${bankSchemes[0].interestRate}` : 'फॉर्म भरें'}
+                </p>
               </div>
             </div>
           </div>
+
+          {bankSchemes.length > 0 ? (
+            <div className="text-xs text-green-600 flex items-center justify-center gap-1">
+              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+              Live data from {bankSchemes.length} banks / {bankSchemes.length} बैंकों से लाइव डेटा
+            </div>
+          ) : (
+            <div className="text-xs text-orange-600 flex items-center justify-center gap-1">
+              <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+              Enter details in expanded view for loan schemes / विस्तृत जानकारी के लिए फॉर्म भरें
+            </div>
+          )}
 
           <button className="w-full py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all">
             View All Features / सभी सुविधाएं देखें
@@ -113,35 +214,47 @@ export function LoanBuddy({ expanded = false }: LoanBuddyProps) {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-700">Annual Revenue / वार्षिक आय</label>
-                <Input placeholder="₹10,00,000" className="bg-white/60" />
+                <Input 
+                  placeholder="₹10,00,000" 
+                  className="bg-white/60" 
+                  value={annualRevenue}
+                  onChange={(e) => setAnnualRevenue(e.target.value)}
+                />
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-700">Industry / उद्योग</label>
-                <Select>
+                <Select value={businessType} onValueChange={setBusinessType}>
                   <SelectTrigger className="bg-white/60">
                     <SelectValue placeholder="Select industry" />
                   </SelectTrigger>
                   <SelectContent className="z-50 bg-white/30 backdrop-blur-lg border border-white/20 shadow-md rounded-xl ring-1 ring-white/10">
-
                     <SelectItem value="manufacturing">Manufacturing</SelectItem>
                     <SelectItem value="retail">Retail</SelectItem>
                     <SelectItem value="services">Services</SelectItem>
                     <SelectItem value="food">Food & Beverage</SelectItem>
+                    <SelectItem value="textile">Textile & Clothing</SelectItem>
+                    <SelectItem value="electronics">Electronics</SelectItem>
+                    <SelectItem value="construction">Construction</SelectItem>
+                    <SelectItem value="healthcare">Healthcare</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">GST Number / जीएसटी नंबर</label>
-                <Input placeholder="29GGGGG1314R9Z6" className="bg-white/60" />
+                <label className="text-sm font-medium text-gray-700">Loan Amount Required / आवश्यक ऋण राशि</label>
+                <Input 
+                  placeholder="₹5,00,000" 
+                  className="bg-white/60" 
+                  value={loanAmount}
+                  onChange={(e) => setLoanAmount(e.target.value)}
+                />
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-700">Years Active / वर्षों से सक्रिय</label>
-                <Select>
+                <Select value={yearsActive} onValueChange={setYearsActive}>
                   <SelectTrigger className="bg-white/60">
                     <SelectValue placeholder="Select years" />
                   </SelectTrigger>
                   <SelectContent className="z-50 bg-white/30 backdrop-blur-lg border border-white/20 shadow-md rounded-xl ring-1 ring-white/10">
-
                     <SelectItem value="1">Less than 1 year</SelectItem>
                     <SelectItem value="2">1-2 years</SelectItem>
                     <SelectItem value="5">3-5 years</SelectItem>
@@ -151,36 +264,125 @@ export function LoanBuddy({ expanded = false }: LoanBuddyProps) {
               </div>
             </div>
 
-            <Button className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white py-3 rounded-xl mb-6">
-              <Search className="w-4 h-4 mr-2" />
-              Scan & Match Lenders / स्कैन और मैच करें
+            <Button 
+              className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white py-3 rounded-xl mb-6"
+              onClick={fetchBankSchemes}
+              disabled={isLoading || !businessType || !annualRevenue}
+            >
+              {isLoading ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Search className="w-4 h-4 mr-2" />
+              )}
+              {isLoading ? 'Fetching Latest Schemes...' : 'Scan & Match Lenders'} / {isLoading ? 'योजनाएं खोजी जा रही हैं...' : 'स्कैन और मैच करें'}
             </Button>
 
             {/* Best-Fit Results */}
             <div className="space-y-4">
-              <h5 className="font-semibold text-gray-800">Best-Fit Loan Schemes / सर्वोत्तम ऋण योजनाएं</h5>
-              {loanOffers.map((offer, index) => (
-                <div key={index} className="p-4 bg-white/50 rounded-xl border border-white/30 hover:shadow-lg transition-all duration-200">
-                  <div className="flex items-center justify-between mb-3">
-                    <h5 className="font-medium text-gray-800">{offer.bank}</h5>
-                    <span className="text-xl font-bold text-blue-600">{offer.amount}</span>
+              <div className="flex items-center justify-between">
+                <h5 className="font-semibold text-gray-800">Best-Fit Loan Schemes / सर्वोत्तम ऋण योजनाएं</h5>
+                {bankSchemes.length > 0 && (
+                  <span className="text-xs text-green-600 flex items-center gap-1">
+                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                    Live Data / लाइव डेटा
+                  </span>
+                )}
+              </div>
+
+              {/* AI Recommendations */}
+              {recommendations && (
+                <div className="p-4 bg-gradient-to-r from-green-50 to-blue-50 rounded-xl border border-green-200 mb-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Brain className="w-5 h-5 text-blue-600" />
+                    <h6 className="font-medium text-gray-800">AI Recommendation / AI सिफारिश</h6>
                   </div>
-                  <div className="grid grid-cols-3 gap-4 text-sm text-gray-600 mb-3">
-                    <div>
-                      <span className="text-gray-500">Rate:</span> {offer.rate}
-                    </div>
-                    <div>
-                      <span className="text-gray-500">Approval:</span> {offer.approval}
-                    </div>
-                    <div>
-                      <span className="text-gray-500">Docs:</span> {offer.docs} required
-                    </div>
-                  </div>
-                  <Button className="w-full py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
-                    Apply Now / अभी आवेदन करें
-                  </Button>
+                  <p className="text-sm text-gray-700 mb-2">
+                    <strong>Best Match:</strong> {recommendations.bestMatch}
+                  </p>
+                  <p className="text-xs text-gray-600">{recommendations.reasoning}</p>
                 </div>
-              ))}
+              )}
+
+              {/* Loading State */}
+              {isLoading && (
+                <div className="text-center py-8">
+                  <Loader2 className="w-8 h-8 animate-spin text-blue-500 mx-auto mb-4" />
+                  <p className="text-gray-600">Fetching latest bank schemes... / नवीनतम बैंक योजनाएं खोजी जा रही हैं...</p>
+                </div>
+              )}
+
+              {/* Real-time Bank Schemes */}
+              {bankSchemes.length > 0 ? (
+                bankSchemes.slice(0, 6).map((scheme, index) => (
+                  <div 
+                    key={index} 
+                    className={`p-5 rounded-xl border transition-all duration-200 hover:shadow-lg ${
+                      scheme.isRecommended 
+                        ? 'border-green-300 bg-gradient-to-r from-green-50 to-green-100' 
+                        : 'border-white/30 bg-white/50'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <h5 className="font-medium text-gray-800">{scheme.bankName}</h5>
+                        {scheme.isRecommended && (
+                          <Star className="w-4 h-4 text-yellow-500 fill-current" />
+                        )}
+                      </div>
+                      <span className="text-lg font-bold text-blue-600">{scheme.loanAmountRange}</span>
+                    </div>
+                    
+                    <h6 className="text-sm font-medium text-gray-700 mb-2">{scheme.schemeName}</h6>
+                    
+                    <div className="grid grid-cols-2 gap-4 text-sm text-gray-600 mb-3">
+                      <div>
+                        <span className="text-gray-500">Rate:</span> {scheme.interestRate}
+                      </div>
+                      <div>
+                        <span className="text-gray-500">Processing:</span> {scheme.processingTime}
+                      </div>
+                    </div>
+
+                    {/* Key Features */}
+                    <div className="mb-3">
+                      <p className="text-xs font-medium text-gray-700 mb-1">Key Features:</p>
+                      <div className="flex flex-wrap gap-1">
+                        {scheme.keyFeatures.slice(0, 2).map((feature, idx) => (
+                          <span key={idx} className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded-full">
+                            {feature}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="flex gap-2">
+                      <Button className="flex-1 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
+                        Apply Now / अभी आवेदन करें
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        className="px-3"
+                        onClick={() => window.open(scheme.applicationLink, '_blank')}
+                      >
+                        <ExternalLink className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))
+              ) : !isLoading && businessType && annualRevenue ? (
+                <div className="text-center py-8 text-gray-500">
+                  <AlertCircle className="w-8 h-8 mx-auto mb-2" />
+                  <p>No schemes found. Please check your criteria. / कोई योजना नहीं मिली। कृपया अपने मानदंड जांचें।</p>
+                </div>
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <Brain className="w-8 h-8 mx-auto mb-2" />
+                  <p className="font-medium mb-2">Ready to find your perfect loan match?</p>
+                  <p>Enter your business details above to see personalized loan schemes from top banks.</p>
+                  <p className="text-sm mt-2 text-gray-400">व्यक्तिगत ऋण योजनाएं देखने के लिए ऊपर अपना व्यापारिक विवरण दर्ज करें।</p>
+                </div>
+              )}
             </div>
           </div>
         </TabsContent>
