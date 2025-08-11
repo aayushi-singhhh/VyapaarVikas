@@ -356,7 +356,10 @@ export function LoanBuddy({ expanded = false }: LoanBuddyProps) {
                     </div>
 
                     <div className="flex gap-2">
-                      <Button className="flex-1 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
+                      <Button 
+                        className="flex-1 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                        onClick={() => window.open(scheme.applicationLink, '_blank')}
+                      >
                         Apply Now / अभी आवेदन करें
                       </Button>
                       <Button 

@@ -31,6 +31,8 @@ IMPORTANT: Customize the recommendations based on this specific business profile
 
 Provide 4-6 TAILORED loan schemes from major Indian banks that specifically match this business profile.
 
+For each scheme, provide the ACTUAL application link to the bank's business loan or MSME loan application page, not just the homepage.
+
 Return ONLY a valid JSON object in this exact format (no markdown, no extra text):
 
 {
@@ -45,7 +47,7 @@ Return ONLY a valid JSON object in this exact format (no markdown, no extra text
       "eligibilityRequiredCriteria": ["Criteria 1", "Criteria 2", "Criteria 3"],
       "requiredDocuments": ["Document 1", "Document 2", "Document 3"],
       "specialBenefits": ["Benefit 1 for this business type", "Benefit 2"],
-      "applicationLink": "https://bankwebsite.com/",
+      "applicationLink": "https://specific-bank-business-loan-page.com/apply",
       "lastUpdated": "2025-01-12"
     }
   ],
@@ -172,7 +174,7 @@ function createDynamicSchemes(businessType?: string, revenue?: string, loanAmoun
         eligibilityRequiredCriteria: [`Business operational for minimum ${revenueNum > 5000000 ? '2' : '3'} years`, "Valid Udyam registration", "Good credit history"],
         requiredDocuments: ["Udyam Registration Certificate", "GST Registration", "Bank statements (12 months)", "ITR for last 3 years", "Business profile and project report"],
         specialBenefits: [config.benefits[0], config.benefits[1], "CGTMSE coverage available"],
-        applicationLink: "https://sbi.co.in/",
+        applicationLink: "https://sbi.co.in/web/sme/loans-and-advances/term-loans",
         lastUpdated: "2025-01-12"
       },
       {
@@ -185,7 +187,7 @@ function createDynamicSchemes(businessType?: string, revenue?: string, loanAmoun
         eligibilityRequiredCriteria: [`Business vintage of minimum ${revenueNum > 3000000 ? '2' : '3'} years`, `Annual turnover minimum ₹${Math.floor(revenueNum/50000)*50000/100000}L`, "CIBIL score 650+"],
         requiredDocuments: ["Business registration proof", "GST returns", "Bank statements (6 months)", "ITR (2 years)", "Identity and address proof"],
         specialBenefits: ["Pre-approved offers for existing customers", config.benefits[2] || "Quick disbursement", "No prepayment charges"],
-        applicationLink: "https://hdfcbank.com/",
+        applicationLink: "https://hdfcbank.com/personal/borrow/popular-loans/business-loan",
         lastUpdated: "2025-01-12"
       },
       {
@@ -198,7 +200,7 @@ function createDynamicSchemes(businessType?: string, revenue?: string, loanAmoun
         eligibilityRequiredCriteria: [`Business operational for ${revenueNum > 4000000 ? '2+' : '3+'} years`, `Minimum annual turnover ₹${Math.floor(revenueNum/25000)*25000/100000}L`, "Satisfactory credit bureau score"],
         requiredDocuments: ["Udyam registration", "GST certificate", "Financial statements", "Bank statements (12 months)", "IT returns (3 years)"],
         specialBenefits: ["Relationship-based pricing", config.benefits[1], "Online account management"],
-        applicationLink: "https://icicibank.com/",
+        applicationLink: "https://icicibank.com/personal/loans/business-loan",
         lastUpdated: "2025-01-12"
       },
       {
@@ -211,7 +213,7 @@ function createDynamicSchemes(businessType?: string, revenue?: string, loanAmoun
         eligibilityRequiredCriteria: [`Business vintage minimum ${revenueNum > 3000000 ? '2' : '3'} years`, `Annual sales minimum ₹${Math.floor(revenueNum/40000)*40000/100000}L`, "No adverse credit history"],
         requiredDocuments: ["Business registration documents", "GST registration and returns", "Bank account statements", "Financial statements", "KYC documents"],
         specialBenefits: [config.benefits[0], "Flexible repayment tenure", "Quick sanction and disbursement"],
-        applicationLink: "https://axisbank.com/",
+        applicationLink: "https://axisbank.com/corporate/sme-banking/loans",
         lastUpdated: "2025-01-12"
       }
     ],
@@ -258,7 +260,7 @@ function getCurrentMSMESchemes(businessType?: string, revenue?: string, loanAmou
           "Lower processing fees",
           "Overdraft facility option"
         ],
-        applicationLink: "https://sbi.co.in/",
+        applicationLink: "https://sbi.co.in/web/sme/loans-and-advances/term-loans",
         lastUpdated: "2025-01-11"
       },
       {
@@ -289,7 +291,7 @@ function getCurrentMSMESchemes(businessType?: string, revenue?: string, loanAmou
           "No prepayment charges",
           "Quick disbursement"
         ],
-        applicationLink: "https://hdfcbank.com/",
+        applicationLink: "https://hdfcbank.com/personal/borrow/popular-loans/business-loan",
         lastUpdated: "2025-01-11"
       },
       {
@@ -320,7 +322,7 @@ function getCurrentMSMESchemes(businessType?: string, revenue?: string, loanAmou
           "Multi-product banking solutions",
           "Online account management"
         ],
-        applicationLink: "https://icicibank.com/",
+        applicationLink: "https://icicibank.com/personal/loans/business-loan",
         lastUpdated: "2025-01-11"
       },
       {
@@ -351,7 +353,7 @@ function getCurrentMSMESchemes(businessType?: string, revenue?: string, loanAmou
           "Flexible repayment tenure",
           "Quick sanction and disbursement"
         ],
-        applicationLink: "https://axisbank.com/",
+        applicationLink: "https://axisbank.com/corporate/sme-banking/loans",
         lastUpdated: "2025-01-11"
       },
       {
@@ -382,7 +384,7 @@ function getCurrentMSMESchemes(businessType?: string, revenue?: string, loanAmou
           "Lower margin requirements",
           "Doorstep banking services"
         ],
-        applicationLink: "https://bankofbaroda.in/",
+        applicationLink: "https://bankofbaroda.in/personal-banking/loans/sme-loans",
         lastUpdated: "2025-01-11"
       },
       {
@@ -413,7 +415,7 @@ function getCurrentMSMESchemes(businessType?: string, revenue?: string, loanAmou
           "Credit guarantee coverage",
           "Technical and financial assistance"
         ],
-        applicationLink: "https://pnbindia.in/",
+        applicationLink: "https://pnbindia.in/sme.html",
         lastUpdated: "2025-01-11"
       }
     ],
