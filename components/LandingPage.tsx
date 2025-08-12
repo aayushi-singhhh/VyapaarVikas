@@ -177,11 +177,10 @@ export function LandingPage({ onNavigate }: LandingPageProps) {
               </Button>
               <Button
                 size="lg"
-                variant="outline"
-                className="px-8 py-4 text-lg border-2 border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 bg-white/80 backdrop-blur-sm"
-                onClick={() => onNavigate("signup")}
+                className="px-8 py-4 text-lg bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105"
+                onClick={() => onNavigate("student-creator")}
               >
-                {currentContent.signup}
+                {language === "en" ? "Student Creator" : "छात्र रचनाकार"}
               </Button>
             </div>
           </div>

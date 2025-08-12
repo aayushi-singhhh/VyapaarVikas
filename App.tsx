@@ -4,8 +4,9 @@ import { useState } from "react";
 import { LandingPage } from "./components/LandingPage";
 import { Authentication } from "./components/Authentication";
 import { Dashboard } from "./components/Dashboard";
+import { CreatorHub } from "./components/student-creator/CreatorHub";
 
-type PageType = 'landing' | 'login' | 'signup' | 'dashboard';
+type PageType = 'landing' | 'login' | 'signup' | 'dashboard' | 'student-creator';
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState<PageType>('landing');
@@ -24,6 +25,8 @@ export default function App() {
         return <Authentication onNavigate={handleNavigate} initialMode="signup" />;
       case 'dashboard':
         return <Dashboard onNavigate={handleNavigate} />;
+      case 'student-creator':
+        return <CreatorHub onNavigate={handleNavigate} />;
       default:
         return <LandingPage onNavigate={handleNavigate} />;
     }
