@@ -6,6 +6,7 @@ import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
+import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
 import { CreatorHub } from "./student-creator/CreatorHub";
 
 interface AuthenticationProps {
@@ -18,6 +19,8 @@ export function Authentication({ onNavigate, initialMode = 'login' }: Authentica
   const [userType, setUserType] = useState<'msme' | 'creator'>('msme');
   const [showPassword, setShowPassword] = useState(false);
   const [language, setLanguage] = useState('en');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const content = {
     en: {
@@ -27,6 +30,7 @@ export function Authentication({ onNavigate, initialMode = 'login' }: Authentica
       studentCreator: "Student Creator",
       firstName: "First Name",
       lastName: "Last Name",
+      fullName: "Full Name",
       email: "Email",
       phone: "Phone Number",
       password: "Password",
@@ -43,7 +47,9 @@ export function Authentication({ onNavigate, initialMode = 'login' }: Authentica
       collegeName: "College/University",
       specialization: "Specialization",
       companyRegNumber: "Company Registration Number",
-      gstNumber: "GST Number (Optional)"
+      gstNumber: "GST Number (Optional)",
+      bio: "Bio",
+      dateOfBirth: "Date of Birth"
     },
     hi: {
       login: "लॉगिन",
@@ -52,6 +58,7 @@ export function Authentication({ onNavigate, initialMode = 'login' }: Authentica
       studentCreator: "छात्र रचनाकार",
       firstName: "पहला नाम",
       lastName: "अंतिम नाम",
+      fullName: "पूरा नाम",
       email: "ईमेल",
       phone: "फ़ोन नंबर",
       password: "पासवर्ड",
@@ -68,17 +75,196 @@ export function Authentication({ onNavigate, initialMode = 'login' }: Authentica
       collegeName: "कॉलेज/विश्वविद्यालय",
       specialization: "विशेषज्ञता",
       companyRegNumber: "कंपनी पंजीकरण संख्या",
-      gstNumber: "जीएसटी नंबर (वैकल्पिक)"
+      gstNumber: "जीएसटी नंबर (वैकल्पिक)",
+      bio: "बायो",
+      dateOfBirth: "जन्म तिथि"
     }
   };
 
   const currentContent = content[language as keyof typeof content];
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleGoogleSuccess = async (credentialResponse: any) => {
+    try {
+      setLoading(true);
+      setError('');
+      
+      // Decode the JWT token to get user info
+      const credential = credentialResponse.credential;
+      const base64Url = credential.split('.')[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const jsonPayload = decodeURIComponent(
+        atob(base64)
+          .split('')
+          .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+          .join('')
+      );
+      
+      const userInfo = JSON.parse(jsonPayload);
+      
+      // Create user data for API
+      const userData = {
+        name: userInfo.name,
+        email: userInfo.email,
+        password: `google_${userInfo.sub}`, // Use Google ID as password placeholder
+        phoneNumber: '', // Will be collected later or made optional
+        userType: 'creator',
+        collegeName: '', // Will be collected in profile completion
+        specialization: '',
+        isGoogleAuth: true
+      };
+
+      const response = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(userData),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        // If user already exists, try to login instead
+        if (data.error && data.error.includes('already exists')) {
+          // Try Google login
+          const loginResponse = await fetch('/api/auth/login', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              email: userInfo.email,
+              password: `google_${userInfo.sub}`,
+            }),
+          });
+
+          const loginData = await loginResponse.json();
+          
+          if (loginResponse.ok) {
+            localStorage.setItem('authToken', loginData.token);
+            localStorage.setItem('user', JSON.stringify(loginData.user));
+            onNavigate('dashboard');
+            return;
+          }
+        }
+        
+        setError(data.error || 'Google authentication failed');
+        return;
+      }
+
+      // Store token and navigate
+      localStorage.setItem('authToken', data.token);
+      localStorage.setItem('user', JSON.stringify(data.user));
+      onNavigate('dashboard');
+      
+    } catch (error) {
+      console.error('Google authentication error:', error);
+      setError('Google authentication failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleError = () => {
+    setError('Google authentication was cancelled or failed');
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Here you would typically handle the authentication
-    // For now, we'll just navigate to the dashboard
-    onNavigate('dashboard');
+    setLoading(true);
+    setError('');
+
+    const formData = new FormData(e.target as HTMLFormElement);
+    
+    try {
+      if (mode === 'login') {
+        // Login API call
+        const response = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email: formData.get('email'),
+            password: formData.get('password'),
+          }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          setError(data.error || 'Login failed');
+          return;
+        }
+
+        // Store token in localStorage
+        localStorage.setItem('authToken', data.token);
+        localStorage.setItem('user', JSON.stringify(data.user));
+
+        // Navigate to dashboard
+        onNavigate('dashboard');
+      } else {
+        // Signup validation
+        const password = formData.get('password') as string;
+        const confirmPassword = formData.get('confirmPassword') as string;
+        
+        if (password !== confirmPassword) {
+          setError('Passwords do not match');
+          return;
+        }
+        
+        if (password.length < 6) {
+          setError('Password must be at least 6 characters long');
+          return;
+        }
+
+        // Signup API call
+        const userData: any = {
+          name: `${formData.get('firstName')} ${formData.get('lastName')}`.trim() || formData.get('fullName'),
+          email: formData.get('email'),
+          password: password,
+          phoneNumber: formData.get('phone'),
+          userType,
+        };
+
+        // Add type-specific fields
+        if (userType === 'msme') {
+          userData.businessName = formData.get('businessName');
+          userData.companyRegNumber = formData.get('companyRegNumber');
+          userData.gstNumber = formData.get('gstNumber');
+        } else if (userType === 'creator') {
+          userData.collegeName = formData.get('collegeName');
+          userData.specialization = formData.get('specialization');
+        }
+
+        const response = await fetch('/api/auth/signup', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(userData),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          setError(data.error || 'Signup failed');
+          return;
+        }
+
+        // Store token in localStorage
+        localStorage.setItem('authToken', data.token);
+        localStorage.setItem('user', JSON.stringify(data.user));
+
+        // Navigate to dashboard
+        onNavigate('dashboard');
+      }
+    } catch (error) {
+      console.error('Authentication error:', error);
+      setError('Something went wrong. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -156,6 +342,12 @@ export function Authentication({ onNavigate, initialMode = 'login' }: Authentica
 
             {/* Enhanced Authentication form with soft shadows */}
             <div className="glass-card rounded-3xl p-10 max-w-4xl mx-auto shadow-2xl">
+              {error && (
+                <div className="mb-6 p-4 bg-red-100 border border-red-300 text-red-700 rounded-lg">
+                  {error}
+                </div>
+              )}
+              
               <Tabs value={userType} onValueChange={(value) => setUserType(value as 'msme' | 'creator')}>
                 <TabsList className="grid w-full grid-cols-2 mb-6 bg-white/60 p-1 rounded-2xl">
                   <TabsTrigger value="msme" className="flex items-center gap-2 rounded-xl py-3">
@@ -183,6 +375,7 @@ export function Authentication({ onNavigate, initialMode = 'login' }: Authentica
                             </Label>
                             <Input
                               id="firstName"
+                              name="firstName"
                               placeholder={currentContent.firstName}
                               className="bg-white/70 backdrop-blur-sm border border-white/30 rounded-xl shadow-sm focus:shadow-md transition-all duration-200"
                               required
@@ -194,6 +387,7 @@ export function Authentication({ onNavigate, initialMode = 'login' }: Authentica
                             </Label>
                             <Input
                               id="lastName"
+                              name="lastName"
                               placeholder={currentContent.lastName}
                               className="bg-white/70 backdrop-blur-sm border border-white/30 rounded-xl shadow-sm focus:shadow-md transition-all duration-200"
                               required
@@ -209,6 +403,7 @@ export function Authentication({ onNavigate, initialMode = 'login' }: Authentica
                             <Building className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                             <Input
                               id="businessName"
+                              name="businessName"
                               placeholder={currentContent.businessName}
                               className="pl-10 bg-white/70 backdrop-blur-sm border border-white/30 rounded-xl shadow-sm focus:shadow-md transition-all duration-200"
                               required
@@ -222,6 +417,7 @@ export function Authentication({ onNavigate, initialMode = 'login' }: Authentica
                           </Label>
                           <Input
                             id="companyRegNumber"
+                            name="companyRegNumber"
                             placeholder="e.g., U12345TN2020PTC123456"
                             className="bg-white/70 backdrop-blur-sm border border-white/30 rounded-xl shadow-sm focus:shadow-md transition-all duration-200"
                             required
@@ -234,6 +430,7 @@ export function Authentication({ onNavigate, initialMode = 'login' }: Authentica
                           </Label>
                           <Input
                             id="gstNumber"
+                            name="gstNumber"
                             placeholder="e.g., 29GGGGG1314R9Z6"
                             className="bg-white/70 backdrop-blur-sm border border-white/30 rounded-xl shadow-sm focus:shadow-md transition-all duration-200"
                           />
@@ -249,6 +446,7 @@ export function Authentication({ onNavigate, initialMode = 'login' }: Authentica
                         <Mail className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                         <Input
                           id="email"
+                          name="email"
                           type="email"
                           placeholder={currentContent.email}
                           className="pl-10 bg-white/70 backdrop-blur-sm border border-white/30 rounded-xl shadow-sm focus:shadow-md transition-all duration-200"
@@ -266,6 +464,7 @@ export function Authentication({ onNavigate, initialMode = 'login' }: Authentica
                           <Phone className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                           <Input
                             id="phone"
+                            name="phone"
                             type="tel"
                             placeholder="+91 9876543210"
                             className="pl-10 bg-white/70 backdrop-blur-sm border border-white/30 rounded-xl shadow-sm focus:shadow-md transition-all duration-200"
@@ -283,6 +482,7 @@ export function Authentication({ onNavigate, initialMode = 'login' }: Authentica
                         <Lock className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                         <Input
                           id="password"
+                          name="password"
                           type={showPassword ? "text" : "password"}
                           placeholder={currentContent.password}
                           className="pl-10 pr-10 bg-white/70 backdrop-blur-sm border border-white/30 rounded-xl shadow-sm focus:shadow-md transition-all duration-200"
@@ -307,6 +507,7 @@ export function Authentication({ onNavigate, initialMode = 'login' }: Authentica
                           <Lock className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                           <Input
                             id="confirmPassword"
+                            name="confirmPassword"
                             type="password"
                             placeholder={currentContent.confirmPassword}
                             className="pl-10 bg-white/70 backdrop-blur-sm border border-white/30 rounded-xl shadow-sm focus:shadow-md transition-all duration-200"
@@ -318,15 +519,191 @@ export function Authentication({ onNavigate, initialMode = 'login' }: Authentica
 
                     <Button 
                       type="submit" 
-                      className="w-full py-4 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105"
+                      disabled={loading}
+                      className="w-full py-4 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {mode === 'login' ? currentContent.loginButton : currentContent.registerMSME}
+                      {loading ? 'Please wait...' : (mode === 'login' ? currentContent.loginButton : currentContent.registerMSME)}
                     </Button>
                   </form>
                 </TabsContent>
 
                 <TabsContent value="creator">
-                  <CreatorHub mode={mode} />
+                  <form onSubmit={handleSubmit} className="space-y-5">
+                    {mode === 'signup' && (
+                      <>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="creatorFirstName" className="text-gray-700">
+                              {currentContent.firstName} / {content.hi.firstName}
+                            </Label>
+                            <Input
+                              id="creatorFirstName"
+                              name="firstName"
+                              placeholder={currentContent.firstName}
+                              className="bg-white/70 backdrop-blur-sm border border-white/30 rounded-xl shadow-sm focus:shadow-md transition-all duration-200"
+                              required
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="creatorLastName" className="text-gray-700">
+                              {currentContent.lastName} / {content.hi.lastName}
+                            </Label>
+                            <Input
+                              id="creatorLastName"
+                              name="lastName"
+                              placeholder={currentContent.lastName}
+                              className="bg-white/70 backdrop-blur-sm border border-white/30 rounded-xl shadow-sm focus:shadow-md transition-all duration-200"
+                              required
+                            />
+                          </div>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor="collegeName" className="text-gray-700">
+                            {currentContent.collegeName} / {content.hi.collegeName}
+                          </Label>
+                          <div className="relative">
+                            <GraduationCap className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                            <Input
+                              id="collegeName"
+                              name="collegeName"
+                              placeholder={currentContent.collegeName}
+                              className="pl-10 bg-white/70 backdrop-blur-sm border border-white/30 rounded-xl shadow-sm focus:shadow-md transition-all duration-200"
+                              required
+                            />
+                          </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="specialization" className="text-gray-700">
+                            {currentContent.specialization} / {content.hi.specialization}
+                          </Label>
+                          <Input
+                            id="specialization"
+                            name="specialization"
+                            placeholder="e.g., Marketing, Design, Computer Science"
+                            className="bg-white/70 backdrop-blur-sm border border-white/30 rounded-xl shadow-sm focus:shadow-md transition-all duration-200"
+                            required
+                          />
+                        </div>
+                      </>
+                    )}
+
+                    <div className="space-y-2">
+                      <Label htmlFor="creatorEmail" className="text-gray-700">
+                        {currentContent.email} / {content.hi.email}
+                      </Label>
+                      <div className="relative">
+                        <Mail className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                        <Input
+                          id="creatorEmail"
+                          name="email"
+                          type="email"
+                          placeholder={currentContent.email}
+                          className="pl-10 bg-white/70 backdrop-blur-sm border border-white/30 rounded-xl shadow-sm focus:shadow-md transition-all duration-200"
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    {mode === 'signup' && (
+                      <div className="space-y-2">
+                        <Label htmlFor="creatorPhone" className="text-gray-700">
+                          {currentContent.phone} / {content.hi.phone}
+                        </Label>
+                        <div className="relative">
+                          <Phone className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                          <Input
+                            id="creatorPhone"
+                            name="phone"
+                            type="tel"
+                            placeholder="+91 9876543210"
+                            className="pl-10 bg-white/70 backdrop-blur-sm border border-white/30 rounded-xl shadow-sm focus:shadow-md transition-all duration-200"
+                            required
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="space-y-2">
+                      <Label htmlFor="creatorPassword" className="text-gray-700">
+                        {currentContent.password} / {content.hi.password}
+                      </Label>
+                      <div className="relative">
+                        <Lock className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                        <Input
+                          id="creatorPassword"
+                          name="password"
+                          type={showPassword ? "text" : "password"}
+                          placeholder={currentContent.password}
+                          className="pl-10 pr-10 bg-white/70 backdrop-blur-sm border border-white/30 rounded-xl shadow-sm focus:shadow-md transition-all duration-200"
+                          required
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                        >
+                          {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      </div>
+                    </div>
+
+                    {mode === 'signup' && (
+                      <div className="space-y-2">
+                        <Label htmlFor="creatorConfirmPassword" className="text-gray-700">
+                          {currentContent.confirmPassword} / {content.hi.confirmPassword}
+                        </Label>
+                        <div className="relative">
+                          <Lock className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                          <Input
+                            id="creatorConfirmPassword"
+                            name="confirmPassword"
+                            type="password"
+                            placeholder={currentContent.confirmPassword}
+                            className="pl-10 bg-white/70 backdrop-blur-sm border border-white/30 rounded-xl shadow-sm focus:shadow-md transition-all duration-200"
+                            required
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    <Button 
+                      type="submit" 
+                      disabled={loading}
+                      className="w-full py-4 bg-gradient-to-r from-purple-600 to-blue-700 hover:from-purple-700 hover:to-blue-800 text-white rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {loading ? 'Please wait...' : (mode === 'login' ? currentContent.loginButton : currentContent.registerCreator)}
+                    </Button>
+
+                    {/* Google Authentication Option for Student Creators */}
+                    <div className="mt-4">
+                      <div className="relative">
+                        <div className="absolute inset-0 flex items-center">
+                          <span className="w-full border-t border-gray-300" />
+                        </div>
+                        <div className="relative flex justify-center text-sm">
+                          <span className="px-2 bg-white text-gray-500">
+                            {language === 'en' ? 'Or continue with' : 'या इसके साथ जारी रखें'}
+                          </span>
+                        </div>
+                      </div>
+                      
+                      <div className="mt-4 flex justify-center">
+                        <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_OAUTH_CLIENT_ID || ''}>
+                          <GoogleLogin
+                            onSuccess={handleGoogleSuccess}
+                            onError={handleGoogleError}
+                            theme="outline"
+                            size="large"
+                            text={mode === 'login' ? 'signin_with' : 'signup_with'}
+                            shape="rectangular"
+                            width="300"
+                          />
+                        </GoogleOAuthProvider>
+                      </div>
+                    </div>
+                  </form>
                 </TabsContent>
               </Tabs>
 

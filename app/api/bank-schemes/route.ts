@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
     }
 
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
     // Create a comprehensive prompt for getting current bank schemes
     const prompt = `
@@ -23,47 +23,48 @@ Business Profile:
 - Loan Amount Required: ₹${loanAmount || 'Not specified'}
 - Credit Score: ${creditScore || 'Not specified'}
 
-IMPORTANT: Customize the recommendations based on this specific business profile. For example:
-- Manufacturing businesses need equipment loans and working capital
-- Retail businesses need inventory financing and point-of-sale loans  
-- Restaurant businesses need equipment financing and quick working capital
-- Service businesses need minimal collateral options
+IMPORTANT: 
+1. Customize the recommendations based on this specific business profile
+2. Provide ACTUAL current loan schemes from major Indian banks
+3. Return ONLY valid JSON - no markdown, no code blocks, no additional text
+4. Start directly with { and end with }
 
-Provide 4-6 TAILORED loan schemes from major Indian banks that specifically match this business profile.
+For each scheme, provide the ACTUAL application link to the bank's business loan or MSME loan application page.
 
-For each scheme, provide the ACTUAL application link to the bank's business loan or MSME loan application page, not just the homepage.
-
-Return ONLY a valid JSON object in this exact format (no markdown, no extra text):
+Return this exact JSON format:
 
 {
   "schemes": [
     {
-      "bankName": "Bank Name",
-      "schemeName": "Specific Scheme Name for this business type",
-      "loanAmountRange": "₹X Lakh - ₹Y Crore",
-      "interestRate": "X% - Y% p.a.",
-      "processingTime": "X-Y working days",
-      "keyFeatures": ["Feature 1 relevant to this business", "Feature 2", "Feature 3"],
-      "eligibilityRequiredCriteria": ["Criteria 1", "Criteria 2", "Criteria 3"],
-      "requiredDocuments": ["Document 1", "Document 2", "Document 3"],
-      "specialBenefits": ["Benefit 1 for this business type", "Benefit 2"],
-      "applicationLink": "https://specific-bank-business-loan-page.com/apply",
-      "lastUpdated": "2025-01-12"
+      "bankName": "State Bank of India",
+      "schemeName": "SBI MSME Business Loan",
+      "loanAmountRange": "₹5 Lakh - ₹2 Crore",
+      "interestRate": "9.50% - 11.50% p.a.",
+      "processingTime": "7-15 working days",
+      "keyFeatures": ["Feature 1", "Feature 2", "Feature 3"],
+      "eligibilityRequiredCriteria": ["Criteria 1", "Criteria 2"],
+      "requiredDocuments": ["Document 1", "Document 2"],
+      "specialBenefits": ["Benefit 1", "Benefit 2"],
+      "applicationLink": "https://sbi.co.in/web/sme/loans-and-advances/term-loans",
+      "lastUpdated": "2025-08-12"
     }
   ],
   "recommendations": {
-    "bestMatch": "Best bank for this specific business type",
-    "reasoning": "Why this bank is best for a ${businessType} business with ₹${revenue} revenue",
+    "bestMatch": "Best bank name",
+    "reasoning": "Why this bank is best for the specific business",
     "alternativeOptions": ["Alternative 1", "Alternative 2"]
   }
 }`;
 
     try {
+      console.log('Making request to Gemini AI with business type:', businessType);
       const result = await model.generateContent(prompt);
       const response = await result.response;
       const text = response.text();
       
-      console.log('Gemini AI Response:', text); // Debug log
+      console.log('Gemini AI Response received, length:', text.length);
+      console.log('Response starts with:', text.substring(0, 100));
+      console.log('Response ends with:', text.substring(text.length - 100));
       
       // Try to parse the JSON response
       let schemesData;
@@ -71,37 +72,60 @@ Return ONLY a valid JSON object in this exact format (no markdown, no extra text
         // Clean the response text (remove markdown formatting if any)
         let cleanText = text.trim();
         
-        // Remove markdown code blocks if present
-        if (cleanText.startsWith('```json')) {
-          cleanText = cleanText.replace(/```json\s*/, '').replace(/\s*```$/, '');
-        } else if (cleanText.startsWith('```')) {
-          cleanText = cleanText.replace(/```\s*/, '').replace(/\s*```$/, '');
-        }
+        console.log('Raw AI response length:', text.length);
+        console.log('First 500 chars:', text.substring(0, 500));
         
-        // Extract JSON object
-        const jsonMatch = cleanText.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
-          schemesData = JSON.parse(jsonMatch[0]);
-          console.log('Successfully parsed AI response'); // Debug log
+        // Remove various markdown formatting
+        cleanText = cleanText
+          .replace(/^```json\s*/i, '')
+          .replace(/^```\s*/, '')
+          .replace(/\s*```$/, '')
+          .replace(/^\s*json\s*/i, '')
+          .trim();
+        
+        // Try to find JSON object - look for first { and last }
+        const firstBrace = cleanText.indexOf('{');
+        const lastBrace = cleanText.lastIndexOf('}');
+        
+        if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+          const jsonText = cleanText.substring(firstBrace, lastBrace + 1);
+          console.log('Extracted JSON text length:', jsonText.length);
+          console.log('JSON preview:', jsonText.substring(0, 200));
+          
+          schemesData = JSON.parse(jsonText);
+          console.log('Successfully parsed AI response with schemes:', schemesData.schemes?.length || 0);
         } else {
-          throw new Error('No JSON found in response');
+          throw new Error(`No valid JSON braces found. First: ${firstBrace}, Last: ${lastBrace}`);
         }
       } catch (parseError) {
         console.error('Error parsing AI response:', parseError);
-        console.error('Raw response:', text);
-        // Create a dynamic fallback based on business type
-        schemesData = createDynamicSchemes(businessType, revenue, loanAmount);
+        console.error('Cleaned text preview:', text.trim().substring(0, 500));
+        
+        // Try alternative parsing methods before falling back
+        try {
+          // Try parsing the entire cleaned text
+          const alternativeClean = text.replace(/```json|```|json/gi, '').trim();
+          schemesData = JSON.parse(alternativeClean);
+          console.log('Alternative parsing successful');
+        } catch (altError) {
+          console.error('Alternative parsing also failed:', altError);
+          // Create a dynamic fallback based on business type
+          schemesData = createDynamicSchemes(businessType, revenue, loanAmount);
+        }
       }
 
       // Validate and enhance the data
       const enhancedSchemes = enhanceSchemeData(schemesData, businessType, revenue);
+      console.log('Returning enhanced schemes with', enhancedSchemes.schemes?.length || 0, 'schemes');
 
       return NextResponse.json(enhancedSchemes);
     } catch (aiError) {
       console.error('Gemini AI error:', aiError);
+      console.error('AI Error details:', aiError instanceof Error ? aiError.message : String(aiError));
       
       // Create dynamic schemes based on business profile instead of static fallback
       const dynamicSchemes = createDynamicSchemes(businessType, revenue, loanAmount);
+      console.log('Using dynamic fallback schemes');
       return NextResponse.json(dynamicSchemes);
     }
 
