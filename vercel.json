@@ -3,7 +3,6 @@
   "devCommand": "npm run dev",
   "installCommand": "npm install",
   "framework": "nextjs",
-  "nodeVersion": "18.x",
   "env": [
     "MONGODB_URI",
     "NEXT_PUBLIC_GOOGLE_MAPS_API_KEY",
